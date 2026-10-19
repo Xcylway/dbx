@@ -19,6 +19,11 @@ describe("queryEditorCompletionNavigation", () => {
     expect(queryEditorCompletionNavigationDirection(event("x"))).toBeNull();
   });
 
+  it("ignores keys while an IME composition is active", () => {
+    expect(queryEditorCompletionNavigationDirection({ key: "n", ctrlKey: true, metaKey: false, altKey: false, shiftKey: false, isComposing: true })).toBeNull();
+    expect(queryEditorCompletionNavigationDirection({ key: "p", ctrlKey: true, metaKey: false, altKey: false, shiftKey: false, isComposing: true })).toBeNull();
+  });
+
   it("moves the active completion and consumes the key only when CodeMirror handled it", () => {
     const view = {} as EditorView;
     const next = vi.fn(() => true);

@@ -2157,8 +2157,12 @@ const codeMirrorLifecycle = useQueryEditorCodeMirror({
         Prec.highest(
           EditorView.domEventHandlers({
             keydown(event, currentView) {
-              if (handleQueryEditorCompletionNavigation(currentView, event, initializedRuntime.codeMirrorMoveCompletionSelection)) return true;
               const shortcuts = normalizeShortcutSettings(settingsStore.editorSettings.shortcuts);
+              // The configured Quick Open shortcut (Ctrl-P on Windows/Linux)
+              // must keep working even while a completion list is open; yield
+              // before completion navigation can consume and preventDefault it.
+              if (matchesShortcut(event, shortcuts.quickOpen)) return false;
+              if (handleQueryEditorCompletionNavigation(currentView, event, initializedRuntime.codeMirrorMoveCompletionSelection)) return true;
               if (matchesShortcut(event, shortcuts.selectLineEnds)) {
                 event.preventDefault();
                 return selectLineEnds(currentView);
