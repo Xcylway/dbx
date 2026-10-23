@@ -186,7 +186,7 @@ vi.mock("@/components/ui/searchable-select", async () => {
             "data-model-value": props.modelValue,
             "data-options": JSON.stringify(props.options),
             "data-allow-custom": String(props.allowCustom),
-            onClick: () => emit("update:modelValue", "data-mysql-table-charset-select" in attrs ? "utf8mb4" : "data-mysql-table-collation-select" in attrs ? "utf8mb4_bin" : "custom_domain"),
+            onClick: () => emit("update:modelValue", "data-mysql-table-charset-select" in attrs ? "utf8mb4" : "data-mysql-table-collation-select" in attrs ? "utf8mb4_0900_ai_ci" : "custom_domain"),
           }),
     }),
   };
@@ -378,7 +378,7 @@ describe("TableStructureEditor MySQL table charset and collation", () => {
         return queryResult(
           ["Charset", "Default collation"],
           [
-            ["utf8mb4", "utf8mb4_0900_ai_ci"],
+            ["utf8mb4", "utf8mb4_bin"],
             ["utf8mb3", "utf8mb3_general_ci"],
           ],
         );
@@ -411,7 +411,7 @@ describe("TableStructureEditor MySQL table charset and collation", () => {
     await vi.waitFor(() =>
       expect(mocks.buildTableStructureChangeSql).toHaveBeenLastCalledWith(expect.objectContaining({ tableName: "users" }), undefined, {
         charset: "utf8mb4",
-        collation: "utf8mb4_0900_ai_ci",
+        collation: "utf8mb4_bin",
       }),
     );
 
@@ -419,9 +419,11 @@ describe("TableStructureEditor MySQL table charset and collation", () => {
     await vi.waitFor(() =>
       expect(mocks.buildTableStructureChangeSql).toHaveBeenLastCalledWith(expect.objectContaining({ tableName: "users" }), undefined, {
         charset: "utf8mb4",
-        collation: "utf8mb4_bin",
+        collation: "utf8mb4_0900_ai_ci",
       }),
     );
+
+    expect(root.textContent?.match(/structureEditor\.mysqlTableDefaultsHint/g)).toHaveLength(2);
   });
 });
 

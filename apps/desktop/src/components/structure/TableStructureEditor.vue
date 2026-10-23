@@ -1723,7 +1723,8 @@ function onMysqlTableCharsetChange(value: string) {
   mysqlTableCharset.value = value;
   const collationCharset = mysqlTableCollation.value.split("_", 1)[0]?.toLowerCase();
   if (mysqlTableCollation.value && collationCharset !== value.trim().toLowerCase()) {
-    mysqlTableCollation.value = collationOptionsForCharset(value)[0] ?? "";
+    const metadata = serverCharsetMetadata.value;
+    mysqlTableCollation.value = metadata?.defaultCollationsByCharset[normalizeCreateDatabaseCharsetKey(value)] || collationOptionsForCharset(value)[0] || "";
   }
 }
 
@@ -7757,35 +7758,45 @@ watch(
 
     <div v-if="supportsMysqlEngine && !isCreateMode" class="flex shrink-0 items-center gap-2">
       <label class="shrink-0 font-medium text-muted-foreground">{{ t("structureEditor.characterSet") }}</label>
-      <SearchableSelect
-        :model-value="mysqlTableCharset"
-        :options="mysqlCharsetOptions"
-        :placeholder="t('structureEditor.charsetPlaceholder')"
-        :search-placeholder="t('structureEditor.charsetPlaceholder')"
-        :empty-text="t('structureEditor.noMatchingType')"
-        :allow-custom="true"
-        :loading="charsetMetadataLoading"
-        :loading-text="t('common.loading')"
-        :disabled="charsetMetadataLoading || saving"
-        :trigger-class="[structureMonoControlClass, 'w-[180px] max-w-[180px]']"
-        data-mysql-table-charset-select
-        @update:model-value="onMysqlTableCharsetChange"
-      />
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <SearchableSelect
+            :model-value="mysqlTableCharset"
+            :options="mysqlCharsetOptions"
+            :placeholder="t('structureEditor.charsetPlaceholder')"
+            :search-placeholder="t('structureEditor.charsetPlaceholder')"
+            :empty-text="t('structureEditor.noMatchingType')"
+            :allow-custom="true"
+            :loading="charsetMetadataLoading"
+            :loading-text="t('common.loading')"
+            :disabled="charsetMetadataLoading || saving"
+            :trigger-class="[structureMonoControlClass, 'w-[180px] max-w-[180px]']"
+            data-mysql-table-charset-select
+            @update:model-value="onMysqlTableCharsetChange"
+          />
+        </TooltipTrigger>
+        <TooltipContent>{{ t("structureEditor.mysqlTableDefaultsHint") }}</TooltipContent>
+      </Tooltip>
     </div>
 
     <div v-if="supportsMysqlEngine && !isCreateMode" class="flex shrink-0 items-center gap-2">
       <label class="shrink-0 font-medium text-muted-foreground">{{ t("structureEditor.collation") }}</label>
-      <SearchableSelect
-        v-model="mysqlTableCollation"
-        :options="collationOptionsForCharset(mysqlTableCharset)"
-        :placeholder="t('structureEditor.collationPlaceholder')"
-        :search-placeholder="t('structureEditor.collationPlaceholder')"
-        :empty-text="t('structureEditor.noMatchingType')"
-        :allow-custom="true"
-        :disabled="charsetMetadataLoading || saving"
-        :trigger-class="[structureMonoControlClass, 'w-[220px] max-w-[220px]']"
-        data-mysql-table-collation-select
-      />
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <SearchableSelect
+            v-model="mysqlTableCollation"
+            :options="collationOptionsForCharset(mysqlTableCharset)"
+            :placeholder="t('structureEditor.collationPlaceholder')"
+            :search-placeholder="t('structureEditor.collationPlaceholder')"
+            :empty-text="t('structureEditor.noMatchingType')"
+            :allow-custom="true"
+            :disabled="charsetMetadataLoading || saving"
+            :trigger-class="[structureMonoControlClass, 'w-[220px] max-w-[220px]']"
+            data-mysql-table-collation-select
+          />
+        </TooltipTrigger>
+        <TooltipContent>{{ t("structureEditor.mysqlTableDefaultsHint") }}</TooltipContent>
+      </Tooltip>
     </div>
 
     <TablePhysicalOptionsEditor v-if="isCreateMode && databaseType === 'transwarp'" v-model="physicalOptions" :config="INCEPTOR_PHYSICAL_OPTIONS" :columns="columns.filter((column) => !column.markedForDrop && !!column.name.trim())" :disabled="saving" />

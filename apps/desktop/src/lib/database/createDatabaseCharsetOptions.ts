@@ -5,6 +5,7 @@ type QueryLikeResult = {
 
 export interface CreateDatabaseCharsetMetadata {
   charsets: string[];
+  defaultCollationsByCharset: Record<string, string>;
   collationsByCharset: Record<string, string[]>;
 }
 
@@ -61,6 +62,7 @@ export function nextCreateDatabaseCollation(nextCharset: string, previousCharset
 export function fallbackCreateDatabaseCharsetMetadata(): CreateDatabaseCharsetMetadata {
   return {
     charsets: [...CREATE_DATABASE_CHARSET_OPTIONS],
+    defaultCollationsByCharset: Object.fromEntries(Object.entries(FALLBACK_COLLATION_OPTIONS).map(([charset, collations]) => [charset, collations[0] ?? ""])),
     collationsByCharset: { ...FALLBACK_COLLATION_OPTIONS },
   };
 }
@@ -73,6 +75,7 @@ export function parseCreateDatabaseCharsetMetadata(charsetResult: QueryLikeResul
   const collationDefaultIndex = columnIndex(collationResult.columns, ["default", "is_default"]);
 
   const charsets = uniqueStrings(charsetResult.rows.map((row) => cellString(row[charsetNameIndex])));
+  const defaultCollationsByCharset: Record<string, string> = {};
   const collationsByCharset: Record<string, string[]> = {};
 
   for (const row of collationResult.rows) {
@@ -81,6 +84,7 @@ export function parseCreateDatabaseCharsetMetadata(charsetResult: QueryLikeResul
     if (!collation || !charset) continue;
     collationsByCharset[charset] ??= [];
     if (isDefaultFlag(row[collationDefaultIndex])) {
+      defaultCollationsByCharset[charset] = collation;
       collationsByCharset[charset].unshift(collation);
     } else if (!collationsByCharset[charset].includes(collation)) {
       collationsByCharset[charset].push(collation);
@@ -91,15 +95,23 @@ export function parseCreateDatabaseCharsetMetadata(charsetResult: QueryLikeResul
     const charset = normalizeCreateDatabaseCharsetKey(cellString(row[charsetNameIndex]));
     const defaultCollation = cellString(row[charsetDefaultCollationIndex]);
     if (!charset || !defaultCollation) continue;
+    defaultCollationsByCharset[charset] = defaultCollation;
     collationsByCharset[charset] ??= [];
     const existingIndex = collationsByCharset[charset].indexOf(defaultCollation);
     if (existingIndex > 0) collationsByCharset[charset].splice(existingIndex, 1);
     if (existingIndex !== 0) collationsByCharset[charset].unshift(defaultCollation);
   }
 
+  const resolvedCollationsByCharset = Object.keys(collationsByCharset).length ? collationsByCharset : { ...FALLBACK_COLLATION_OPTIONS };
+  for (const charset of charsets) {
+    const key = normalizeCreateDatabaseCharsetKey(charset);
+    defaultCollationsByCharset[key] ??= resolvedCollationsByCharset[key]?.[0] ?? "";
+  }
+
   return {
     charsets: charsets.length ? charsets : [...CREATE_DATABASE_CHARSET_OPTIONS],
-    collationsByCharset: Object.keys(collationsByCharset).length ? collationsByCharset : { ...FALLBACK_COLLATION_OPTIONS },
+    defaultCollationsByCharset,
+    collationsByCharset: resolvedCollationsByCharset,
   };
 }
 

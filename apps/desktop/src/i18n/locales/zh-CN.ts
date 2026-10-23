@@ -6508,6 +6508,7 @@ export default withEnglishFallback({
     charsetPlaceholder: "字符集",
     collation: "排序规则",
     collationPlaceholder: "排序规则",
+    mysqlTableDefaultsHint: "仅修改表的默认字符集/排序规则，不会转换现有列或数据。",
     editComment: "编辑注释",
     commentPlaceholder: "输入字段注释...",
     tableCommentPlaceholder: "输入表注释...",
