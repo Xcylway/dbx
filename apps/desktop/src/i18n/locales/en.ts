@@ -6522,6 +6522,7 @@ export default {
     charsetPlaceholder: "Charset",
     collation: "Collation",
     collationPlaceholder: "Collation",
+    mysqlTableDefaultsHint: "Changes only the table's default charset/collation. Existing columns and data are not converted.",
     editComment: "Edit comment",
     commentPlaceholder: "Enter column comment...",
     tableCommentPlaceholder: "Enter table comment...",

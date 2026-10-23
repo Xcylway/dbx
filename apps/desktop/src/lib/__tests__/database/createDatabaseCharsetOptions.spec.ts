@@ -40,6 +40,7 @@ describe("createDatabaseCharsetOptions", () => {
     );
 
     expect(metadata.charsets).toEqual(["utf8mb4", "gbk"]);
+    expect(metadata.defaultCollationsByCharset).toMatchObject({ utf8mb4: "utf8mb4_general_ci", gbk: "gbk_chinese_ci" });
     expect(metadata.collationsByCharset.utf8mb4).toEqual(["utf8mb4_general_ci", "utf8mb4_unicode_ci"]);
     expect(metadata.collationsByCharset.gbk).toEqual(["gbk_chinese_ci"]);
   });
@@ -62,7 +63,27 @@ describe("createDatabaseCharsetOptions", () => {
       },
     );
 
+    expect(metadata.defaultCollationsByCharset.utf8mb4).toBe("utf8mb4_0900_ai_ci");
     expect(metadata.collationsByCharset.utf8mb4).toEqual(["utf8mb4_0900_ai_ci", "utf8mb4_general_ci", "utf8mb4_unicode_ci", "utf8mb4_unicode_520_ci", "utf8mb4_bin"]);
+  });
+
+  it("prefers the default reported by SHOW CHARACTER SET over SHOW COLLATION flags", () => {
+    const metadata = parseCreateDatabaseCharsetMetadata(
+      {
+        columns: ["Charset", "Description", "Default collation", "Maxlen"],
+        rows: [["utf8mb4", "UTF-8 Unicode", "utf8mb4_bin", 4]],
+      },
+      {
+        columns: ["Collation", "Charset", "Id", "Default", "Compiled", "Sortlen"],
+        rows: [
+          ["utf8mb4_0900_ai_ci", "utf8mb4", 255, "Yes", "Yes", 0],
+          ["utf8mb4_bin", "utf8mb4", 46, "", "Yes", 1],
+        ],
+      },
+    );
+
+    expect(metadata.defaultCollationsByCharset.utf8mb4).toBe("utf8mb4_bin");
+    expect(metadata.collationsByCharset.utf8mb4?.[0]).toBe("utf8mb4_bin");
   });
 
   it("keeps custom collations unless the previous value was the old charset default", () => {
