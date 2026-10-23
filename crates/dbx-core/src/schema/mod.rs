@@ -3588,11 +3588,11 @@ mod tests {
 
     #[test]
     fn object_types_request_triggers_only_for_explicit_trigger_requests() {
-        assert!(object_types_request_triggers(Some(&["TRIGGER".to_string()])));
-        assert!(object_types_request_triggers(Some(&["TABLE".to_string(), "trigger".to_string()])));
-        assert!(!object_types_request_triggers(Some(&["TABLE".to_string()])));
-        assert!(!object_types_request_triggers(Some(&[])));
-        assert!(!object_types_request_triggers(None));
+        assert!(crate::schema::object_types_request_triggers(Some(&["TRIGGER".to_string()])));
+        assert!(crate::schema::object_types_request_triggers(Some(&["TABLE".to_string(), "trigger".to_string()])));
+        assert!(!crate::schema::object_types_request_triggers(Some(&["TABLE".to_string()])));
+        assert!(!crate::schema::object_types_request_triggers(Some(&[])));
+        assert!(!crate::schema::object_types_request_triggers(None));
     }
 
     #[test]
